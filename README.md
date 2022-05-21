@@ -121,6 +121,11 @@ Here is a performance comparison of the four Sudoku solver engines compiled and 
 ![Benchmark Results](benchmark.svg)
 <!-- BENCHMARK_END -->
 
+To run the benchmarking suite and dynamically update the results and SVG graph in this README:
+```bash
+go run ./benchmark
+```
+
 ---
 
 ## Testing
