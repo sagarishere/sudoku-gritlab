@@ -1,10 +1,10 @@
 # Go Sudoku Solver
 
-A high-performance Sudoku solver implemented in Go. The application supports three distinct solving methodologies: **Traditional Grid Backtracking**, **Knuth's Algorithm X (Exact Cover)** using the **Dancing Links (DLX)** technique, and **Bitmask Backtracking**.
+A high-performance Sudoku solver implemented in Go. The application supports four distinct solving methodologies: **Traditional Grid Backtracking**, **Knuth's Algorithm X (Exact Cover)** using the **Dancing Links (DLX)** technique, **Bitmask Backtracking**, and **SIMD-Optimized (Tdoku-inspired)**.
 
 ## Features
 
-- **Three-Solver Engine**: Easily toggle between standard Backtracking, Knuth's Algorithm X, and Bitmask Backtracking.
+- **Four-Solver Engine**: Easily toggle between standard Backtracking, Knuth's Algorithm X, Bitmask Backtracking, and SIMD-Optimized (Tdoku-inspired).
 - **Grading Compliant**: Adheres to strict execution constraints (only prints the final solution or `Error` for invalid boards, with no extra debug lines).
 - **Dependency-Free**: Developed strictly using allowed Go built-ins (`os` and `fmt` only).
 - **Robust Validation**: Pre-checks board dimensions, characters, row/column length, and minimum clues (minimum 17 numbers of which at least 8 must be unique) to ensure valid Sudoku properties and prevent panics.
@@ -24,6 +24,12 @@ For advanced performance, the Sudoku grid is formulated as an **Exact Cover Prob
 ### 3. Bitmask Backtracking
 An optimized DFS backtracking engine. Instead of searching lists or maintaining dynamic doubly linked pointers, it stores the state of placed numbers in each row, column, and $3\times3$ box as bits inside $9$ integers (`rowsUsed`, `colsUsed`, `boxesUsed`). Checking validity resolves via single bitwise AND (`&`) operations, placing a digit updates via bitwise OR (`|`), and backtracking clears via bitwise AND NOT (`&^`). This completely eliminates memory allocation and pointer-chasing, keeping all state within ultra-fast CPU L1 cache or registers.
 
+### 4. SIMD-Optimized (Tdoku-Inspired)
+A highly optimized, hardware-friendly solver that simulates SIMD parallel vector architectures using native Go 64-bit integer registers:
+- **Bitboard Candidate Representation**: The complete board is modeled as candidate bitboards (`Candidates [81]uint16`).
+- **Parallel Constraint Propagation**: Integrates DPLL-style constraint satisfying. It recursively propagates Naked Singles and Hidden Singles across horizontal and vertical units.
+- **Hardware Acceleration**: Employs Go's native, compiler-optimized `math/bits` package functions (e.g. `bits.OnesCount`, `bits.TrailingZeros`) which compile directly to hardware instructions (e.g., `POPCNT`, `TZCNT` / `BSF`) on both x86_64 and ARM64 (Apple Silicon) architectures.
+
 ---
 
 ## Configuration (`settings.txt`)
@@ -35,6 +41,7 @@ Create or edit the `settings.txt` file and enter one of the following lines:
 - `backtracking` *(Default)*: Uses the naive recursive backtracking solver.
 - `exact-cover` (or `algo-x`): Uses Knuth's Algorithm X (DLX) solver.
 - `bitmask`: Uses the ultra-fast Bitmask Backtracking solver.
+- `tdoku` (or `simd-tdoku`): Uses the hardware-friendly SIMD-Optimized / Tdoku-inspired solver.
 
 *Note: If `settings.txt` is missing, unreadable, or contains any other value, the application automatically defaults to `backtracking`.*
 
@@ -86,6 +93,8 @@ Error
     ├── algoX.go          # DLX Matrix and Algorithm X solver implementation
     ├── algoX_test.go     # Unit tests specifically for the exact-cover solver
     ├── bitmask.go        # High-performance Bitmask Backtracking solver
+    ├── tdoku.go          # SIMD-Optimized (Tdoku-inspired) solver
+    ├── tdoku_test.go     # Unit tests for the tdoku solver
     ├── createBoard.go    # Argument-to-grid parsing with length checks
     ├── printBoard.go     # Output rendering format
     ├── checkValid.go     # Grid check helpers for backtracking
@@ -97,7 +106,7 @@ Error
 
 ## Testing
 
-A comprehensive, table-driven integration test suite is included in `main_test.go`. It compiles the binary once and executes all 18 subject-defined scenarios (including both valid and invalid layouts) under **all three** backtracking, exact-cover, and bitmask algorithm configurations.
+A comprehensive, table-driven integration test suite is included in `main_test.go`. It compiles the binary once and executes all 18 subject-defined scenarios (including both valid and invalid layouts) under **all four** backtracking, exact-cover, bitmask, and tdoku/simd-tdoku algorithm configurations.
 
 Run all tests across the repository:
 ```bash

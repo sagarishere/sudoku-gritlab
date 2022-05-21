@@ -88,6 +88,8 @@ func main() {
 		solved = sudoku.SolveExactCover(&board)
 	} else if algo == "bitmask" {
 		solved = sudoku.SolveBitmask(&board)
+	} else if algo == "tdoku" || algo == "simd-tdoku" {
+		solved = sudoku.SolveTdoku(&board)
 	} else {
 		solved = recursiveSolve(0, 0)
 	}
